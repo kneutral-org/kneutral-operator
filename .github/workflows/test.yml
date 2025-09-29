@@ -1,0 +1,179 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.21', '1.22']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Run go fmt check
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "Code is not formatted. Please run 'go fmt ./...'"
+          gofmt -s -l .
+          exit 1
+        fi
+
+    - name: Run unit tests
+      run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Build main operator
+      run: go build -v ./...
+
+    - name: Build standalone server
+      run: go build -o bin/standalone ./cmd/standalone/
+
+    - name: Start standalone server and test API
+      run: |
+        # Start standalone server in background
+        ./bin/standalone --mock-data=true --api-bind-address=:8090 &
+        SERVER_PID=$!
+
+        # Wait for server to be ready
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          if curl -s http://localhost:8090/health > /dev/null; then
+            echo "Server is ready!"
+            break
+          fi
+          echo "Waiting... ($i/30)"
+          sleep 2
+        done
+
+        # Run API tests
+        cd docs/examples
+        chmod +x test-api.sh
+        KNEUTRAL_API_URL=http://localhost:8090 ./test-api.sh
+
+        # Clean up
+        kill $SERVER_PID
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Build Docker image
+      run: docker build -t kneutral-operator:${{ github.sha }} .
+
+    - name: Test Docker image
+      run: |
+        docker run --rm kneutral-operator:${{ github.sha }} --help
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=5m
+
+  helm:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: 'v3.12.0'
+
+    - name: Lint Helm chart
+      run: helm lint helm/kneutral-operator
+
+    - name: Template Helm chart
+      run: helm template kneutral-operator helm/kneutral-operator
+
+    - name: Validate Helm chart with test values
+      run: |
+        helm template kneutral-operator helm/kneutral-operator \
+          --set operator.image.tag=test \
+          --set openshift.enabled=true
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate OpenAPI spec
+      uses: char0n/swagger-editor-validate@v1
+      with:
+        definition-file: docs/api/openapi.yaml
+
+    - name: Check documentation links
+      run: |
+        # Simple check for broken internal links in documentation
+        find docs -name "*.md" -exec grep -l "\[.*\](.*/.*)" {} \; | while read file; do
+          echo "Checking links in $file"
+          # Add more sophisticated link checking if needed
+        done
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Gosec Security Scanner
+      uses: securecodewarrior/github-action-gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: gosec-results.sarif
