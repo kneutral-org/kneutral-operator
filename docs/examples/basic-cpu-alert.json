@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "name": "cpu-alerts",
+    "labels": {
+      "category": "infrastructure",
+      "team": "platform"
+    }
+  },
+  "spec": {
+    "groups": [
+      {
+        "name": "cpu.rules",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "HighCPUUsage",
+            "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) > 80",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "component": "node"
+            },
+            "annotations": {
+              "summary": "High CPU usage on {{ $labels.instance }}",
+              "description": "CPU usage is {{ $value | printf \"%.2f\" }}% for more than 5 minutes on instance {{ $labels.instance }}",
+              "runbook_url": "https://runbooks.company.com/alerts/high-cpu"
+            }
+          },
+          {
+            "alert": "CriticalCPUUsage",
+            "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100) > 95",
+            "for": "2m",
+            "labels": {
+              "severity": "critical",
+              "component": "node"
+            },
+            "annotations": {
+              "summary": "Critical CPU usage on {{ $labels.instance }}",
+              "description": "CPU usage is {{ $value | printf \"%.2f\" }}% for more than 2 minutes on instance {{ $labels.instance }}. Immediate action required.",
+              "runbook_url": "https://runbooks.company.com/alerts/critical-cpu"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

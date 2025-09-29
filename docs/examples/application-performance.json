@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "name": "application-performance",
+    "labels": {
+      "category": "application",
+      "team": "backend",
+      "service": "api"
+    }
+  },
+  "spec": {
+    "groups": [
+      {
+        "name": "app.response_time",
+        "interval": "15s",
+        "rules": [
+          {
+            "alert": "HighResponseTime",
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "service": "{{ $labels.service }}"
+            },
+            "annotations": {
+              "summary": "High response time for {{ $labels.service }}",
+              "description": "95th percentile response time is {{ $value | printf \"%.3f\" }}s for service {{ $labels.service }}",
+              "grafana_url": "https://grafana.company.com/d/app-performance",
+              "runbook_url": "https://runbooks.company.com/response-time"
+            }
+          },
+          {
+            "alert": "VeryHighResponseTime",
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5",
+            "for": "2m",
+            "labels": {
+              "severity": "critical",
+              "service": "{{ $labels.service }}"
+            },
+            "annotations": {
+              "summary": "Very high response time for {{ $labels.service }}",
+              "description": "95th percentile response time is {{ $value | printf \"%.3f\" }}s for service {{ $labels.service }}. This is above the critical threshold.",
+              "escalation": "page-oncall"
+            }
+          }
+        ]
+      },
+      {
+        "name": "app.error_rate",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "HighErrorRate",
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) > 0.05",
+            "for": "3m",
+            "labels": {
+              "severity": "warning",
+              "service": "{{ $labels.service }}"
+            },
+            "annotations": {
+              "summary": "High error rate for {{ $labels.service }}",
+              "description": "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}",
+              "threshold": "5%"
+            }
+          },
+          {
+            "alert": "CriticalErrorRate",
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m]) > 0.20",
+            "for": "1m",
+            "labels": {
+              "severity": "critical",
+              "service": "{{ $labels.service }}"
+            },
+            "annotations": {
+              "summary": "Critical error rate for {{ $labels.service }}",
+              "description": "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}. This is above the critical threshold of 20%.",
+              "action": "Check logs and consider circuit breaker activation"
+            }
+          }
+        ]
+      },
+      {
+        "name": "app.throughput",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "LowThroughput",
+            "expr": "rate(http_requests_total[5m]) < 10",
+            "for": "10m",
+            "labels": {
+              "severity": "warning",
+              "service": "{{ $labels.service }}"
+            },
+            "annotations": {
+              "summary": "Low request throughput for {{ $labels.service }}",
+              "description": "Request rate is {{ $value | printf \"%.2f\" }} req/s for service {{ $labels.service }}, which is below the expected baseline",
+              "possible_cause": "Traffic drop, upstream issues, or service degradation"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{{- if .Values.rbac.create -}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kneutral-operator.fullname" . }}-manager-role
+  labels:
+    {{- include "kneutral-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - monitoring.kneutral.io
+  resources:
+  - alertrules
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - monitoring.kneutral.io
+  resources:
+  - alertrules/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - monitoring.kneutral.io
+  resources:
+  - alertrules/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - prometheusrules
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+{{- if .Values.openshift.enabled }}
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  resourceNames:
+  - {{ .Values.openshift.scc.name }}
+  verbs:
+  - use
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kneutral-operator.fullname" . }}-manager-rolebinding
+  labels:
+    {{- include "kneutral-operator.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kneutral-operator.fullname" . }}-manager-role
+subjects:
+- kind: ServiceAccount
+  name: {{ include "kneutral-operator.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "name": "network-monitoring",
+    "labels": {
+      "category": "network",
+      "team": "network-ops",
+      "environment": "production"
+    }
+  },
+  "spec": {
+    "labels": {
+      "app.kubernetes.io/instance": "kneutral",
+      "monitoring.kneutral.io/type": "network"
+    },
+    "groups": [
+      {
+        "name": "network.bandwidth",
+        "interval": "15s",
+        "rules": [
+          {
+            "alert": "HighNetworkTraffic",
+            "expr": "rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m]) > 100000000",
+            "for": "3m",
+            "labels": {
+              "severity": "warning",
+              "interface": "{{ $labels.device }}"
+            },
+            "annotations": {
+              "summary": "High network traffic on {{ $labels.instance }}",
+              "description": "Network traffic is {{ $value | humanize1024 }}B/s on interface {{ $labels.device }} (instance: {{ $labels.instance }})",
+              "dashboard_url": "https://grafana.company.com/d/network-overview"
+            }
+          },
+          {
+            "alert": "NetworkInterfaceDown",
+            "expr": "node_network_up == 0",
+            "for": "1m",
+            "labels": {
+              "severity": "critical",
+              "interface": "{{ $labels.device }}"
+            },
+            "annotations": {
+              "summary": "Network interface {{ $labels.device }} is down",
+              "description": "Network interface {{ $labels.device }} on {{ $labels.instance }} has been down for more than 1 minute",
+              "runbook_url": "https://runbooks.company.com/network/interface-down"
+            }
+          }
+        ]
+      },
+      {
+        "name": "network.errors",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "HighNetworkErrors",
+            "expr": "rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "interface": "{{ $labels.device }}"
+            },
+            "annotations": {
+              "summary": "High network errors on {{ $labels.instance }}",
+              "description": "Network error rate is {{ $value | printf \"%.2f\" }} errors/sec on interface {{ $labels.device }}"
+            }
+          },
+          {
+            "alert": "NetworkPacketLoss",
+            "expr": "(rate(node_network_receive_drop_total[5m]) + rate(node_network_transmit_drop_total[5m])) / (rate(node_network_receive_packets_total[5m]) + rate(node_network_transmit_packets_total[5m])) > 0.01",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "interface": "{{ $labels.device }}"
+            },
+            "annotations": {
+              "summary": "Network packet loss detected on {{ $labels.instance }}",
+              "description": "Packet loss rate is {{ $value | humanizePercentage }} on interface {{ $labels.device }}"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

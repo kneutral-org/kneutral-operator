@@ -1,0 +1,229 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kneutral.arista.dom.rules
+  labels:
+    app.kubernetes.io/instance: kneutral
+spec:
+  groups:
+    - name: kneutral.arista.dom
+      rules:
+        # Alert when DOM RX Power falls below low critical threshold (severe low power, excluding -30 dBm)
+        - alert: LowDOMRXPowerCritical
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+              < on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowCritical{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000) != -30
+            )
+          for: 5m
+          labels:
+            severity: critical
+            source: kneutral
+          annotations:
+            summary: "Critical: Low DOM RX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM RX Power is below low critical threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM RX Power falls below low warning threshold (but not critical)
+        - alert: LowDOMRXPowerWarning
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+              < on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowWarning{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+              >= on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowCritical{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            )
+          for: 5m
+          labels:
+            severity: warning
+            source: kneutral
+          annotations:
+            summary: "Warning: Low DOM RX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM RX Power is below low warning threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM RX Power exceeds high critical threshold (severe high power)
+        - alert: HighDOMRXPowerCritical
+          expr: |
+            10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            > on(desc, entPhysicalDescr) group_left
+            10 * log10(arista_smnp_aristaSensorThresholdHighCritical{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+          for: 5m
+          labels:
+            severity: critical
+            source: kneutral
+          annotations:
+            summary: "Critical: High DOM RX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            description: |
+              DOM RX Power is above high critical threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM RX Power exceeds high warning threshold (but not critical)
+        - alert: HighDOMRXPowerWarning
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+              > on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdHighWarning{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+              <= on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdHighCritical{entPhysicalDescr=~"DOM RX Power.*"} / 1000)
+            )
+          for: 5m
+          labels:
+            severity: warning
+            source: kneutral
+          annotations:
+            summary: "Warning: High DOM RX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM RX Power is above high warning threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # TX Power Alerts
+        # Alert when DOM TX Power falls below low critical threshold (severe low power, excluding -30 dBm)
+        - alert: LowDOMTXPowerCritical
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+              < on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowCritical{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000) != -30
+            )
+          for: 5m
+          labels:
+            severity: critical
+            source: kneutral
+          annotations:
+            summary: "Critical: Low DOM TX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM TX Power is below low critical threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM TX Power falls below low warning threshold (but not critical)
+        - alert: LowDOMTXPowerWarning
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+              < on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowWarning{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+              >= on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdLowCritical{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            )
+          for: 5m
+          labels:
+            severity: warning
+            source: kneutral
+          annotations:
+            summary: "Warning: Low DOM TX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM TX Power is below low warning threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM TX Power exceeds high critical threshold (severe high power)
+        - alert: HighDOMTXPowerCritical
+          expr: |
+            10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            > on(desc, entPhysicalDescr) group_left
+            10 * log10(arista_smnp_aristaSensorThresholdHighCritical{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+          for: 5m
+          labels:
+            severity: critical
+            source: kneutral
+          annotations:
+            summary: "Critical: High DOM TX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM TX Power is above high critical threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm
+
+        # Alert when DOM TX Power exceeds high warning threshold (but not critical)
+        - alert: HighDOMTXPowerWarning
+          expr: |
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+              > on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdHighWarning{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            )
+            and
+            (
+              10 * log10(arista_smnp_entSensorValue{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+              <= on(desc, entPhysicalDescr) group_left
+              10 * log10(arista_smnp_aristaSensorThresholdHighCritical{entPhysicalDescr=~"DOM TX Power.*"} / 1000)
+            )
+          for: 5m
+          labels:
+            severity: warning
+            source: kneutral
+          annotations:
+            summary: "Warning: High DOM TX Power on {{ $labels.entPhysicalDescr }} at {{ $labels.desc }}"
+            grafanaUrl: https://mon.monitor.driveuc.com/d/arista-interfaces/arista-network-interfaces?orgId=1&from=now-6h&to=now&timezone=browser&var-desc={{$labels.desc}}&var-entPhysicalDescr={{$labels.entPhysicalDescr | reReplaceAll "DOM .* Sensor for (.*)" "$1" | urlquery}}
+            description: |
+              DOM TX Power is above high warning threshold
+              Device: {{ $labels.desc }}
+              Site: {{ $labels.site }}
+              Role: {{ $labels.role }}
+              Location: {{ $labels.location }}
+              Interface: {{ $labels.entPhysicalDescr }}
+              Current Power: {{ $value | printf "%.2f" }} dBm

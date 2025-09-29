@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "name": "kubernetes-cluster-alerts",
+    "labels": {
+      "category": "kubernetes",
+      "team": "platform",
+      "component": "cluster"
+    }
+  },
+  "spec": {
+    "groups": [
+      {
+        "name": "kubernetes.nodes",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "NodeNotReady",
+            "expr": "kube_node_status_condition{condition=\"Ready\",status=\"true\"} == 0",
+            "for": "5m",
+            "labels": {
+              "severity": "critical",
+              "node": "{{ $labels.node }}"
+            },
+            "annotations": {
+              "summary": "Node {{ $labels.node }} is not ready",
+              "description": "Node {{ $labels.node }} has been NotReady for more than 5 minutes",
+              "runbook_url": "https://runbooks.company.com/k8s/node-not-ready"
+            }
+          },
+          {
+            "alert": "NodeMemoryPressure",
+            "expr": "kube_node_status_condition{condition=\"MemoryPressure\",status=\"true\"} == 1",
+            "for": "2m",
+            "labels": {
+              "severity": "warning",
+              "node": "{{ $labels.node }}"
+            },
+            "annotations": {
+              "summary": "Node {{ $labels.node }} is under memory pressure",
+              "description": "Node {{ $labels.node }} has been under memory pressure for more than 2 minutes"
+            }
+          },
+          {
+            "alert": "NodeDiskPressure",
+            "expr": "kube_node_status_condition{condition=\"DiskPressure\",status=\"true\"} == 1",
+            "for": "2m",
+            "labels": {
+              "severity": "warning",
+              "node": "{{ $labels.node }}"
+            },
+            "annotations": {
+              "summary": "Node {{ $labels.node }} is under disk pressure",
+              "description": "Node {{ $labels.node }} has been under disk pressure for more than 2 minutes"
+            }
+          }
+        ]
+      },
+      {
+        "name": "kubernetes.pods",
+        "interval": "30s",
+        "rules": [
+          {
+            "alert": "PodCrashLooping",
+            "expr": "rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15 > 0",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "pod": "{{ $labels.pod }}",
+              "namespace": "{{ $labels.namespace }}"
+            },
+            "annotations": {
+              "summary": "Pod {{ $labels.pod }} is crash looping",
+              "description": "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting {{ $value }} times every 15 minutes"
+            }
+          },
+          {
+            "alert": "PodNotReady",
+            "expr": "kube_pod_status_ready{condition=\"false\"} == 1",
+            "for": "10m",
+            "labels": {
+              "severity": "warning",
+              "pod": "{{ $labels.pod }}",
+              "namespace": "{{ $labels.namespace }}"
+            },
+            "annotations": {
+              "summary": "Pod {{ $labels.pod }} is not ready",
+              "description": "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been not ready for more than 10 minutes"
+            }
+          }
+        ]
+      },
+      {
+        "name": "kubernetes.resources",
+        "interval": "1m",
+        "rules": [
+          {
+            "alert": "NodeCPUUsageHigh",
+            "expr": "(1 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])))) * 100 > 80",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "node": "{{ $labels.instance }}"
+            },
+            "annotations": {
+              "summary": "High CPU usage on node {{ $labels.instance }}",
+              "description": "CPU usage is {{ $value | printf \"%.2f\" }}% on node {{ $labels.instance }}"
+            }
+          },
+          {
+            "alert": "NodeMemoryUsageHigh",
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "node": "{{ $labels.instance }}"
+            },
+            "annotations": {
+              "summary": "High memory usage on node {{ $labels.instance }}",
+              "description": "Memory usage is {{ $value | printf \"%.2f\" }}% on node {{ $labels.instance }}"
+            }
+          },
+          {
+            "alert": "NodeDiskUsageHigh",
+            "expr": "(1 - (node_filesystem_avail_bytes{fstype!=\"tmpfs\"} / node_filesystem_size_bytes{fstype!=\"tmpfs\"})) * 100 > 85",
+            "for": "5m",
+            "labels": {
+              "severity": "warning",
+              "node": "{{ $labels.instance }}",
+              "mountpoint": "{{ $labels.mountpoint }}"
+            },
+            "annotations": {
+              "summary": "High disk usage on {{ $labels.mountpoint }}",
+              "description": "Disk usage is {{ $value | printf \"%.2f\" }}% on {{ $labels.mountpoint }} (node: {{ $labels.instance }})"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

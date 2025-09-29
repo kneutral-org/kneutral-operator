@@ -1,0 +1,17 @@
+apiVersion: v2
+name: kneutral-operator
+description: A Kubernetes operator for managing Prometheus AlertRules
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - prometheus
+  - monitoring
+  - alerting
+  - operator
+home: https://github.com/kneutral/kneutral-operator
+sources:
+  - https://github.com/kneutral/kneutral-operator
+maintainers:
+  - name: Kneutral Team
+    email: support@kneutral.io
