@@ -3,7 +3,7 @@ module github.com/kneutral-org/kneutral-operator
 go 1.21
 
 require (
-	github.com/go-logr/logr v1.4.1
+	github.com/go-logr/logr v1.4.3
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.71.0
 	k8s.io/apimachinery v0.29.0
 	k8s.io/client-go v0.29.0
