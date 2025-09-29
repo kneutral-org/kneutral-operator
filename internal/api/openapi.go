@@ -190,11 +190,11 @@ func getOpenAPISpec() map[string]interface{} {
 		},
 		"definitions": map[string]interface{}{
 			"AlertRule": map[string]interface{}{
-				"type": "object",
+				"type":     "object",
 				"required": []string{"metadata", "spec"},
 				"properties": map[string]interface{}{
 					"metadata": map[string]interface{}{
-						"type": "object",
+						"type":     "object",
 						"required": []string{"name"},
 						"properties": map[string]interface{}{
 							"name": map[string]interface{}{
@@ -215,7 +215,7 @@ func getOpenAPISpec() map[string]interface{} {
 						},
 					},
 					"spec": map[string]interface{}{
-						"type": "object",
+						"type":     "object",
 						"required": []string{"groups"},
 						"properties": map[string]interface{}{
 							"groups": map[string]interface{}{
@@ -237,7 +237,7 @@ func getOpenAPISpec() map[string]interface{} {
 				},
 			},
 			"AlertGroup": map[string]interface{}{
-				"type": "object",
+				"type":     "object",
 				"required": []string{"name", "rules"},
 				"properties": map[string]interface{}{
 					"name": map[string]interface{}{
@@ -258,7 +258,7 @@ func getOpenAPISpec() map[string]interface{} {
 				},
 			},
 			"Rule": map[string]interface{}{
-				"type": "object",
+				"type":     "object",
 				"required": []string{"alert", "expr"},
 				"properties": map[string]interface{}{
 					"alert": map[string]interface{}{

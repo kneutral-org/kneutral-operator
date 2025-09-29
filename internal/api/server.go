@@ -75,7 +75,7 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "healthy"})
 }
 
 // handleAlertRules handles AlertRule operations (list all)
@@ -389,5 +389,5 @@ func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
     <p>The API is pre-loaded with example data for testing. Try the endpoints above!</p>
 </body>
 </html>`
-	w.Write([]byte(html))
+	_, _ = w.Write([]byte(html))
 }

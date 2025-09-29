@@ -179,7 +179,7 @@ Current Power: {{ $value | printf "%.2f" }} dBm`,
 	}
 
 	// Create the sample AlertRules
-	client.Create(ctx, cpuAlert)
-	client.Create(ctx, appAlert)
-	client.Create(ctx, networkAlert)
+	_ = client.Create(ctx, cpuAlert)
+	_ = client.Create(ctx, appAlert)
+	_ = client.Create(ctx, networkAlert)
 }
