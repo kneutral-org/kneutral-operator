@@ -243,7 +243,7 @@ func (m *MockClient) Status() client.StatusWriter {
 // Scheme returns the scheme
 func (m *MockClient) Scheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
-	monitoringv1alpha1.AddToScheme(scheme)
+	_ = monitoringv1alpha1.AddToScheme(scheme)
 	return scheme
 }
 
