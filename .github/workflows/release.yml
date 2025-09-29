@@ -142,7 +142,7 @@ jobs:
         echo "Available for Linux, macOS, and Windows (amd64 and arm64)" >> CHANGELOG.md
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           dist/kneutral-operator-*
