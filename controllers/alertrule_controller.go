@@ -16,7 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	monitoringv1alpha1 "github.com/kneutral/kneutral-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/kneutral-org/kneutral-operator/api/v1alpha1"
 )
 
 // AlertRuleReconciler reconciles a AlertRule object

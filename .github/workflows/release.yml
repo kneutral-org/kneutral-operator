@@ -57,7 +57,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ghcr.io/kneutral/kneutral-operator
+        images: ghcr.io/kneutral-org/kneutral-operator
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -136,7 +136,7 @@ jobs:
         echo "- \`make docs\`: Serve documentation locally" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### Docker Images" >> CHANGELOG.md
-        echo "- \`ghcr.io/kneutral/kneutral-operator:${GITHUB_REF#refs/tags/}\`" >> CHANGELOG.md
+        echo "- \`ghcr.io/kneutral-org/kneutral-operator:${GITHUB_REF#refs/tags/}\`" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### Binaries" >> CHANGELOG.md
         echo "Available for Linux, macOS, and Windows (amd64 and arm64)" >> CHANGELOG.md

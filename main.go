@@ -17,9 +17,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	monitoringv1alpha1 "github.com/kneutral/kneutral-operator/api/v1alpha1"
-	"github.com/kneutral/kneutral-operator/controllers"
-	"github.com/kneutral/kneutral-operator/internal/api"
+	monitoringv1alpha1 "github.com/kneutral-org/kneutral-operator/api/v1alpha1"
+	"github.com/kneutral-org/kneutral-operator/controllers"
+	"github.com/kneutral-org/kneutral-operator/internal/api"
 )
 
 var (

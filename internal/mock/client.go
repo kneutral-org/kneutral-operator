@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	monitoringv1alpha1 "github.com/kneutral/kneutral-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/kneutral-org/kneutral-operator/api/v1alpha1"
 )
 
 // MockClient implements the controller-runtime client.Client interface for testing

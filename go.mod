@@ -1,4 +1,4 @@
-module github.com/kneutral/kneutral-operator
+module github.com/kneutral-org/kneutral-operator
 
 go 1.23.4
 

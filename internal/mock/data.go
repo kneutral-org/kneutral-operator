@@ -5,7 +5,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	monitoringv1alpha1 "github.com/kneutral/kneutral-operator/api/v1alpha1"
+	monitoringv1alpha1 "github.com/kneutral-org/kneutral-operator/api/v1alpha1"
 )
 
 // PopulateExampleData adds sample AlertRule data to the mock client

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kneutral/kneutral-operator/internal/api"
-	"github.com/kneutral/kneutral-operator/internal/mock"
+	"github.com/kneutral-org/kneutral-operator/internal/api"
+	"github.com/kneutral-org/kneutral-operator/internal/mock"
 )
 
 func main() {

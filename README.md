@@ -276,4 +276,6 @@ Apache License 2.0
 
 ## Support
 
-For issues and feature requests, please open an issue on GitHub.
+- **Issues**: [GitHub Issues](https://github.com/kneutral-org/kneutral-operator/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/kneutral-org/kneutral-operator/discussions)
+- **Documentation**: Complete API docs in `/docs` folder
